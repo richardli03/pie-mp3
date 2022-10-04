@@ -11,8 +11,8 @@ void loop() {
   for (int n = 0; n < 5; n++) {
       voltages[n] = analogRead(sensorPin);
   }
-  Serial.print(average(voltages,5));
-  delay(0.5);
+  Serial.println(average(voltages,5));
+  delay(20);
 }
 
 float average (int * array, int len)  // assuming array is int.
