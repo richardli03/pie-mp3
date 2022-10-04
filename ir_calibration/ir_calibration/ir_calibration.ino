@@ -1,5 +1,8 @@
 int sensorPin = A0;    // select the input pin for the IR
 int voltages[5];
+int curr_voltage; 
+bool isLine; 
+int threshold_voltage; 
 
 void setup() {
   // declare the sensorPin as an INPUT:
@@ -11,7 +14,14 @@ void loop() {
   for (int n = 0; n < 5; n++) {
       voltages[n] = analogRead(sensorPin);
   }
-  Serial.println(average(voltages,5));
+  curr_voltage = average(voltages,5);
+  if (curr_voltage > threshold_voltage) {
+    isLine = true;
+  }
+  else {
+    isLine = false;
+  }
+  Serial.println(isLine);
   delay(20);
 }
 
