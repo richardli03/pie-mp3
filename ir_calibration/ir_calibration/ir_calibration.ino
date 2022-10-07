@@ -2,7 +2,7 @@ int sensorPin = A0;    // select the input pin for the IR
 int voltages[5];
 int curr_voltage; 
 bool isLine; 
-int threshold_voltage; 
+int threshold_voltage = 700; 
 
 void setup() {
   // declare the sensorPin as an INPUT:
@@ -22,7 +22,8 @@ void loop() {
     isLine = false;
   }
   Serial.println(isLine);
-  delay(20);
+  Serial.println(curr_voltage);
+  delay(500);
 }
 
 float average (int * array, int len)  // assuming array is int.
