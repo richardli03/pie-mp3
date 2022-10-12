@@ -1,58 +1,112 @@
+// Import libraries
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
-const int leftSensorPin = A0; // IR sensor R
-const int rightSensorPin = A1; // IR sensor L
+
+// Define and initialize pins 
+const int leftSensorPin = A1; // IR sensor R
+const int rightSensorPin = A0; // IR sensor L
+
+// Define motorshield and motor objects
 Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
-Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
-AFMS.begin();
+Adafruit_DCMotor *left_motor = AFMS.getMotor(3);
+
+// Pack sensor pins into array
 int sensorPins[2] = {leftSensorPin, rightSensorPin};
-int voltages[5];
+
+// Define voltage array for filtering 
+int voltages[10];
+
+// Define current voltage 
 int curr_voltage; 
-bool isLine; 
-int threshold_voltage = 700; 
-int initialSpeed;
-int fasterSpeed;
+
+// Define booleans that tell us if the IRs detect a line or not 
+bool is_line_left;
+bool is_line_right;
+
+// Define threshold voltage for determining whether the IR detects a line or not 
+int threshold_voltage_right = 850; 
+int threshold_voltage_left = 600;
+
+// Define initial (default) and increased speeds (when we need to get back on the line) 
+int initialSpeed = 0; // 50 to overcome friction of all the other stuff touching the ground
+int fasterSpeed = 0; // 60
+
 
 void setup() {
-  // declare the sensorPin as an INPUT:
-  pinMode(sensorPin, INPUT);
+  // Declare the sensorPin as an INPUT:
+  pinMode(sensorPins[0], INPUT);
+  pinMode(sensorPins[1], INPUT);
+  // Initialize bools that tell us whether we're on the line or not 
+  is_line_left = false;
+  is_line_right = false;
+  // Start Adafruit motorshield 
+  AFMS.begin();
+  // Begin serial 
   Serial.begin(9600);
-  right_motor->setSpeed(initialSpeed); // Maybe try 150
+  // Set the motor speeds to the initial speed variable and make them turn forward
+  right_motor->setSpeed(initialSpeed); 
   right_motor->run(FORWARD);
-  left_motor->setSpeed(initialSpeed); // Maybe try 150
+  left_motor->setSpeed(initialSpeed); 
   left_motor->run(FORWARD);
 }
 
 void loop() {
-  right_motor->setSpeed(initialSpeed); // Maybe try 150
-  left_motor->setSpeed(initialSpeed); // Maybe try 150
+// Check if we're not on line - we shouldn't be on the line 
+  if (is_line_left == false) {
+    right_motor->setSpeed(initialSpeed); 
+  }
+  if (is_line_right == false) {
+    left_motor->setSpeed(initialSpeed);
+  }
+
+  // For each sensor i = 0 => left i = 1 => right 
   for (int i = 0; i < 2; i++){
-     for (int n = 0; n < 5; n++) {  
+    // Collect 10 voltages 
+     for (int n = 0; n < 10; n++) {  
       voltages[n] = analogRead(sensorPins[i]);
       }
-      
+      // Take average of those 10 voltages 
       curr_voltage = average(voltages,5);
-      if (curr_voltage > threshold_voltage) {
-        isLine = true;
-      }
-      else {
-        isLine = false;
-        if (i == 0) {
+      // If it's the left sensor 
+      if (i == 0) {
+        // Check if it sees the tape
+        if (curr_voltage > threshold_voltage_left) {
+          // If it sees the tape, increase the speed of the right motor until is_line_left is false again (until the left IR is off the tape)
+          Serial.print("Left voltage: ");
+          Serial.println(curr_voltage);
+          is_line_left = true; 
           right_motor->setSpeed(fasterSpeed);
         }
         else {
-          left_motor->setSpeed(fasterSpeed);
+          
+          is_line_left = false;
         }
       }
-      Serial.println(isLine);
-      Serial.println(curr_voltage);
-      delay(500);
+      else {
+        // If right IR sees tape 
+        if (curr_voltage > threshold_voltage_right) {
+          Serial.print("Right voltage: ");
+          Serial.println(curr_voltage);
+          is_line_right = true;
+          // Increase speed of left motor until right IR doesn't see line anymore - boolean changes in following else statement 
+          left_motor->setSpeed(fasterSpeed); 
+        }
+        else {
+          is_line_right = false;
+        }
+      }
+      // Print info for debugging 
+      Serial.print("Left: ");
+      Serial.println(is_line_left);
+      Serial.print("Right: ");
+      Serial.println(is_line_right);
+      //delay(2000);
     }
   }
  
-
+// Find average voltage of 5 readings to filter IR data 
 float average (int * array, int len)  // assuming array is int.
 {
   long sum = 0L ;  // sum will be larger than an item, long for safety.
