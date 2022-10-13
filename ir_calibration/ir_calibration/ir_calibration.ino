@@ -26,12 +26,12 @@ bool is_line_left;
 bool is_line_right;
 
 // Define threshold voltage for determining whether the IR detects a line or not 
-int threshold_voltage_right = 850; 
+int threshold_voltage_right = 800; 
 int threshold_voltage_left = 600;
 
 // Define initial (default) and increased speeds (when we need to get back on the line) 
 int initialSpeed = 0; // 50 to overcome friction of all the other stuff touching the ground
-int fasterSpeed = 0; // 60
+int fasterSpeed = 70; // 60
 
 
 void setup() {
@@ -98,11 +98,13 @@ void loop() {
         }
       }
       // Print info for debugging 
+      Serial.print("Right voltage: ");
+      Serial.println(curr_voltage);
       Serial.print("Left: ");
       Serial.println(is_line_left);
       Serial.print("Right: ");
       Serial.println(is_line_right);
-      //delay(2000);
+      delay(2000);
     }
   }
  
