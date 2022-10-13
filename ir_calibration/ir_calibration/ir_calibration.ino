@@ -30,7 +30,7 @@ int threshold_voltage_right = 800;
 int threshold_voltage_left = 600;
 
 // Define initial (default) and increased speeds (when we need to get back on the line) 
-int initialSpeed = 0; // 50 to overcome friction of all the other stuff touching the ground
+int initialSpeed = 25; // 50 to overcome friction of all the other stuff touching the ground
 int fasterSpeed = 70; // 60
 
 
@@ -54,13 +54,10 @@ void setup() {
 
 void loop() {
 // Check if we're not on line - we shouldn't be on the line 
-  if (is_line_left == false) {
+  if (is_line_left == false && is_line_right == false) {
     right_motor->setSpeed(initialSpeed); 
+    left_motor->setSpeed(initialSpeed); 
   }
-  if (is_line_right == false) {
-    left_motor->setSpeed(initialSpeed);
-  }
-
   // For each sensor i = 0 => left i = 1 => right 
   for (int i = 0; i < 2; i++){
     // Collect 10 voltages 
@@ -78,6 +75,7 @@ void loop() {
           Serial.println(curr_voltage);
           is_line_left = true; 
           right_motor->setSpeed(fasterSpeed);
+          left_motor->setSpeed(0);
         }
         else {
           
@@ -92,6 +90,8 @@ void loop() {
           is_line_right = true;
           // Increase speed of left motor until right IR doesn't see line anymore - boolean changes in following else statement 
           left_motor->setSpeed(fasterSpeed); 
+          right_motor->setSpeed(0);
+          
         }
         else {
           is_line_right = false;
@@ -104,7 +104,7 @@ void loop() {
       Serial.println(is_line_left);
       Serial.print("Right: ");
       Serial.println(is_line_right);
-      delay(2000);
+      //delay(2000);
     }
   }
  
